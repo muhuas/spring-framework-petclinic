@@ -20,3 +20,25 @@ steps:
     publishJUnitResults: false
     testResultsFiles: '**/surefire-reports/TEST-*.xml'
     goals: 'package'
+
+# add these as the last steps (below all the other `task` items under `steps`)
+# to deploy to your app service
+- task: CopyFiles@2
+  displayName: Copy Files
+  inputs:
+    SourceFolder: $(system.defaultworkingdirectory)
+    Contents: '**'
+    TargetFolder: $(build.artifactstagingdirectory)
+
+- task: PublishBuildArtifacts@1
+  displayName: Publish Artifact
+  inputs:
+    PathtoPublish: $(build.artifactstagingdirectory)
+
+- task: AzureWebApp@1
+  displayName: Azure Web App Deploy
+  inputs:
+    azureSubscription: $(serviceConnectionToAzure)
+    appType: webAppLinux
+    appName: $(appName)
+    package: $(build.artifactstagingdirectory)/**/*.war
